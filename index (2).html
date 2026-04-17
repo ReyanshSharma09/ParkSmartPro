@@ -1,0 +1,2841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkSmart Pro | Smart Time-Locked Parking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Enhanced Color Palette - Lighter Dark Theme */
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a1f2e;
+            --bg-card: #1e2537;
+            --bg-card-hover: #252d42;
+            --bg-elevated: #2a3449;
+            
+            /* Vibrant Accents */
+            --accent-primary: #00ff9d;
+            --accent-primary-glow: rgba(0, 255, 157, 0.3);
+            --accent-secondary: #00d4ff;
+            --accent-tertiary: #a855f7;
+            --accent-warning: #fbbf24;
+            --accent-danger: #f43f5e;
+            
+            /* Tier Colors */
+            --tier-standard: #10b981;
+            --tier-priority: #f59e0b;
+            --tier-vip: #ec4899;
+            
+            /* Text */
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            
+            /* Borders & Effects */
+            --border-subtle: #2d3748;
+            --border-medium: #3f4b5f;
+            --border-bright: #4b5769;
+            
+            /* Glassmorphism */
+            --glass-bg: rgba(30, 37, 55, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .bg-gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            top: -200px;
+            right: -200px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, var(--accent-tertiary), var(--accent-primary));
+            bottom: -100px;
+            left: -100px;
+            animation-delay: 5s;
+        }
+
+        .orb-3 {
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-tertiary));
+            top: 50%;
+            left: 50%;
+            animation-delay: 10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -50px) scale(1.1); }
+            50% { transform: translate(-30px, 30px) scale(0.9); }
+            75% { transform: translate(30px, 50px) scale(1.05); }
+        }
+
+        /* All content wrapper */
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Top Bar - Live Stats */
+        .top-stats-bar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.75rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+        }
+
+        .top-stats-bar .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 255, 157, 0.1);
+            border: 1px solid rgba(0, 255, 157, 0.2);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .stat-badge:hover {
+            background: rgba(0, 255, 157, 0.2);
+            transform: scale(1.05);
+        }
+
+        .stat-badge i {
+            color: var(--accent-primary);
+        }
+
+        .stat-badge.warning {
+            background: rgba(251, 191, 36, 0.1);
+            border-color: rgba(251, 191, 36, 0.2);
+        }
+
+        .stat-badge.warning i {
+            color: var(--accent-warning);
+        }
+
+        .stat-badge.danger {
+            background: rgba(244, 63, 94, 0.1);
+            border-color: rgba(244, 63, 94, 0.2);
+        }
+
+        .stat-badge.danger i {
+            color: var(--accent-danger);
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1.25rem 0;
+            position: sticky;
+            top: 60px;
+            z-index: 1000;
+        }
+
+        nav .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            position: relative;
+        }
+
+        .logo i {
+            color: var(--accent-primary);
+            font-size: 2rem;
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { 
+                filter: drop-shadow(0 0 8px var(--accent-primary-glow));
+                transform: scale(1);
+            }
+            50% { 
+                filter: drop-shadow(0 0 20px var(--accent-primary-glow));
+                transform: scale(1.1);
+            }
+        }
+
+        .logo .gradient-text {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            position: relative;
+            padding: 0.5rem 0;
+        }
+
+        nav a:hover {
+            color: var(--accent-primary);
+        }
+
+        nav a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 3px;
+        }
+
+        .nav-cta {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-primary) !important;
+            padding: 0.75rem 1.75rem !important;
+            border-radius: 50px;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 15px var(--accent-primary-glow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-cta:hover::before {
+            left: 100%;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px var(--accent-primary-glow);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 5rem 2rem;
+            position: relative;
+        }
+
+        .hero .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.3fr 0.7fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: 4rem;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            font-weight: 900;
+        }
+
+        .hero-content .gradient-text {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-shift 3s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            line-height: 1.7;
+        }
+
+        /* USP Alert Box */
+        .usp-alert {
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.1), rgba(236, 72, 153, 0.1));
+            border: 2px solid var(--accent-danger);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2.5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .usp-alert::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .usp-alert .alert-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-danger);
+        }
+
+        .usp-alert .alert-content {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .usp-alert .timer-display-hero {
+            font-size: 3rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-danger);
+            text-shadow: 0 0 20px var(--accent-danger);
+            margin: 0.5rem 0;
+        }
+
+        /* Hero Stats */
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .hero-stat {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 1.75rem;
+            border-radius: 16px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .hero-stat:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-5px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 30px rgba(0, 255, 157, 0.2);
+        }
+
+        .hero-stat-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .hero-stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Reservation Card - Enhanced */
+        .reservation-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reservation-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 255, 157, 0.1) 0%, transparent 70%);
+            animation: rotate-gradient 10s linear infinite;
+        }
+
+        @keyframes rotate-gradient {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .reservation-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .reservation-card h3 {
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .reservation-card h3 i {
+            color: var(--accent-primary);
+        }
+
+        /* Form Styling */
+        .search-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group label i {
+            color: var(--accent-primary);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 1.25rem;
+            background: rgba(15, 20, 25, 0.5);
+            border: 2px solid var(--border-subtle);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px var(--accent-primary-glow);
+            background: rgba(15, 20, 25, 0.7);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-dim);
+        }
+
+        /* Tier Info Boxes */
+        .tier-info-box {
+            background: var(--bg-card);
+            border: 2px solid var(--border-medium);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-top: 0.75rem;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tier-info-box.active {
+            display: block;
+        }
+
+        .tier-info-box.standard {
+            border-color: var(--tier-standard);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), transparent);
+        }
+
+        .tier-info-box.priority {
+            border-color: var(--tier-priority);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent);
+        }
+
+        .tier-info-box.vip {
+            border-color: var(--tier-vip);
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.05), transparent);
+        }
+
+        .tier-benefits {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .tier-benefit {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .tier-benefit i {
+            color: var(--accent-primary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 1.25rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-primary);
+            box-shadow: 0 4px 15px var(--accent-primary-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--accent-primary-glow);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--border-bright);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-primary);
+            background: rgba(0, 255, 157, 0.1);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--accent-danger), #dc2626);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 25px rgba(244, 63, 94, 0.4);
+        }
+
+        /* Parking Results */
+        .parking-results {
+            display: none;
+            margin-top: 2rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .parking-results.active {
+            display: block;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .results-count {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .results-count strong {
+            color: var(--accent-primary);
+            font-size: 1.25rem;
+        }
+
+        .parking-locations {
+            display: grid;
+            gap: 1.25rem;
+        }
+
+        .parking-location-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .parking-location-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .parking-location-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateX(8px);
+            box-shadow: 0 10px 40px rgba(0, 255, 157, 0.2);
+        }
+
+        .parking-location-card:hover::before {
+            opacity: 1;
+        }
+
+        .location-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .location-name {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .location-address {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .location-status {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-available {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--tier-standard);
+            border: 1px solid var(--tier-standard);
+        }
+
+        .status-filling {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--tier-priority);
+            border: 1px solid var(--tier-priority);
+        }
+
+        .status-full {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--accent-danger);
+            border: 1px solid var(--accent-danger);
+        }
+
+        .location-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 1.25rem 0;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .detail-item i {
+            color: var(--accent-primary);
+        }
+
+        .location-features {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin: 1.25rem 0;
+        }
+
+        .feature-badge {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 0.4rem 0.9rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            color: var(--accent-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .location-stats {
+            display: flex;
+            gap: 2rem;
+            padding-top: 1.25rem;
+            margin-top: 1.25rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-item-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-item-value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 0.25rem;
+        }
+
+        .floors-indicator {
+            position: absolute;
+            top: 1.75rem;
+            right: 1.75rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-medium);
+            padding: 0.6rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-medium);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 1100px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalSlideUp 0.4s ease;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--border-medium);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.25rem;
+            color: var(--text-muted);
+        }
+
+        .modal-close:hover {
+            background: var(--accent-danger);
+            color: white;
+            border-color: var(--accent-danger);
+            transform: rotate(90deg);
+        }
+
+        .modal-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-header p {
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Tier Filter */
+        .tier-filter {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border-radius: 16px;
+        }
+
+        .tier-filter-btn {
+            padding: 1rem;
+            border: 2px solid var(--border-medium);
+            background: transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tier-filter-btn.standard {
+            color: var(--tier-standard);
+        }
+
+        .tier-filter-btn.priority {
+            color: var(--tier-priority);
+        }
+
+        .tier-filter-btn.vip {
+            color: var(--tier-vip);
+        }
+
+        .tier-filter-btn.active.standard {
+            background: var(--tier-standard);
+            border-color: var(--tier-standard);
+            color: var(--bg-primary);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .tier-filter-btn.active.priority {
+            background: var(--tier-priority);
+            border-color: var(--tier-priority);
+            color: var(--bg-primary);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .tier-filter-btn.active.vip {
+            background: var(--tier-vip);
+            border-color: var(--tier-vip);
+            color: white;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+        }
+
+        /* Floor Cards */
+        .floors-grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .floor-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .floor-card:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .floor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .floor-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .floor-availability {
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+        }
+
+        .floor-availability.high {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--tier-standard);
+        }
+
+        .floor-availability.medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--tier-priority);
+        }
+
+        .floor-availability.low {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--accent-danger);
+        }
+
+        .floor-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+        }
+
+        .floor-info-item {
+            text-align: center;
+        }
+
+        .floor-info-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .floor-info-value {
+            font-size: 1.75rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Parking Spots Grid */
+        .parking-spots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 75px);
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .parking-spot {
+            width: 75px;
+            height: 75px;
+            border: 2px solid var(--border-medium);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            background: var(--bg-elevated);
+        }
+
+        .parking-spot .spot-icon {
+            font-size: 1.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .parking-spot .tier-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+        }
+
+        .parking-spot.tier-standard .tier-badge {
+            background: var(--tier-standard);
+            box-shadow: 0 0 10px var(--tier-standard);
+        }
+
+        .parking-spot.tier-priority .tier-badge {
+            background: var(--tier-priority);
+            box-shadow: 0 0 10px var(--tier-priority);
+        }
+
+        .parking-spot.tier-vip .tier-badge {
+            background: var(--tier-vip);
+            box-shadow: 0 0 10px var(--tier-vip);
+        }
+
+        .parking-spot.available {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--tier-standard);
+            color: var(--tier-standard);
+        }
+
+        .parking-spot.available:hover {
+            background: var(--tier-standard);
+            color: var(--bg-primary);
+            transform: scale(1.2) rotate(5deg);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+            z-index: 10;
+        }
+
+        .parking-spot.occupied {
+            background: rgba(244, 63, 94, 0.15);
+            border-color: var(--accent-danger);
+            color: var(--accent-danger);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .parking-spot.reserved {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: var(--tier-priority);
+            color: var(--tier-priority);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .parking-spot.hidden {
+            display: none;
+        }
+
+        /* Floor Legend */
+        .floor-legend {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-subtle);
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .legend-box {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 2px solid;
+        }
+
+        .legend-box.tier-standard {
+            background: var(--tier-standard);
+            border-color: var(--tier-standard);
+        }
+
+        .legend-box.tier-priority {
+            background: var(--tier-priority);
+            border-color: var(--tier-priority);
+        }
+
+        .legend-box.tier-vip {
+            background: var(--tier-vip);
+            border-color: var(--tier-vip);
+        }
+
+        /* Timer Display */
+        .timer-display {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+            border: 2px solid var(--accent-primary);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            margin-top: 2rem;
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timer-display::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, var(--accent-primary), transparent 30%);
+            animation: rotate 4s linear infinite;
+            opacity: 0.1;
+        }
+
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+
+        .timer-display.active {
+            display: block;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .timer-display.danger {
+            border-color: var(--accent-danger);
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.1), var(--bg-card));
+        }
+
+        .timer-display > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .timer-header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .countdown {
+            font-size: 5rem;
+            font-weight: 900;
+            color: var(--accent-primary);
+            font-family: 'JetBrains Mono', monospace;
+            margin: 1.5rem 0;
+            text-shadow: 0 0 30px var(--accent-primary-glow);
+            letter-spacing: 0.1em;
+        }
+
+        .timer-display.danger .countdown {
+            color: var(--accent-danger);
+            animation: pulse-danger 1s infinite;
+        }
+
+        @keyframes pulse-danger {
+            0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.7;
+                transform: scale(1.05);
+            }
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 50px;
+            overflow: hidden;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            transition: width 1s linear;
+            border-radius: 50px;
+            box-shadow: 0 0 20px var(--accent-primary-glow);
+        }
+
+        .timer-display.danger .progress-fill {
+            background: linear-gradient(90deg, var(--accent-danger), #dc2626);
+        }
+
+        .timer-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+        }
+
+        .timer-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .timer-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .timer-info-label {
+            color: var(--text-muted);
+        }
+
+        .timer-info-value {
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .timer-actions {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Success Message */
+        .success-message {
+            display: none;
+            margin-top: 2rem;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(0, 212, 255, 0.1));
+            border: 2px solid var(--accent-primary);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .success-message::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer-success 2s infinite;
+        }
+
+        @keyframes shimmer-success {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .success-message.active {
+            display: block;
+            animation: bounceIn 0.6s ease;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            animation: checkmark-pop 0.6s ease 0.3s backwards;
+        }
+
+        @keyframes checkmark-pop {
+            0% {
+                transform: scale(0) rotate(-45deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .success-message h4 {
+            font-size: 2rem;
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+        }
+
+        /* Tiers Section */
+        .section {
+            padding: 6rem 2rem;
+            position: relative;
+        }
+
+        .section .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .tiers-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .tier-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--border-medium);
+            border-radius: 24px;
+            padding: 2.5rem;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tier-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.05));
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .tier-card:hover::before {
+            opacity: 1;
+        }
+
+        .tier-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .tier-card.standard:hover {
+            border-color: var(--tier-standard);
+            box-shadow: 0 20px 60px rgba(16, 185, 129, 0.3);
+        }
+
+        .tier-card.priority-tier:hover {
+            border-color: var(--tier-priority);
+            box-shadow: 0 20px 60px rgba(245, 158, 11, 0.3);
+        }
+
+        .tier-card.vip-tier:hover {
+            border-color: var(--tier-vip);
+            box-shadow: 0 20px 60px rgba(236, 72, 153, 0.3);
+        }
+
+        .tier-card.featured {
+            border-color: var(--accent-primary);
+            transform: scale(1.05);
+        }
+
+        .tier-badge-top {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-primary);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px var(--accent-primary-glow);
+        }
+
+        .tier-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tier-name {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .tier-price {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'JetBrains Mono', monospace;
+            margin: 1.5rem 0;
+        }
+
+        .tier-price span {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        .tier-features {
+            margin: 2rem 0;
+        }
+
+        .tier-features li {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            list-style: none;
+        }
+
+        .tier-features li:last-child {
+            border-bottom: none;
+        }
+
+        .tier-features li i {
+            color: var(--accent-primary);
+            font-size: 1.1rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 2px solid var(--border-subtle);
+            padding: 4rem 2rem 2rem;
+            margin-top: 4rem;
+        }
+
+        footer .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+        }
+
+        .footer-bottom {
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .hero .container {
+                grid-template-columns: 1fr;
+            }
+
+            .tiers-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tier-card.featured {
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                display: none;
+            }
+
+            .top-stats-bar .container {
+                justify-content: center;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .countdown {
+                font-size: 3rem;
+            }
+
+            .parking-spots-grid {
+                grid-template-columns: repeat(auto-fill, 65px);
+                gap: 10px;
+            }
+
+            .parking-spot {
+                width: 65px;
+                height: 65px;
+            }
+
+            .tier-filter {
+                grid-template-columns: 1fr;
+            }
+
+            .floor-info {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header h2 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notification Toast */
+        .notification-toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 1.25rem 1.75rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            z-index: 4000;
+            animation: slideInRight 0.4s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification-toast.active {
+            display: flex;
+        }
+
+        .notification-toast i {
+            font-size: 1.5rem;
+            color: var(--accent-primary);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-card);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--bg-elevated);
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="bg-gradient-orb orb-1"></div>
+        <div class="bg-gradient-orb orb-2"></div>
+        <div class="bg-gradient-orb orb-3"></div>
+    </div>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+        <!-- Top Stats Bar -->
+        <div class="top-stats-bar">
+            <div class="container">
+                <div class="stat-badge">
+                    <i class="fas fa-clock"></i>
+                    <span><strong>Time-Lock:</strong> 60-90 min based on tier</span>
+                </div>
+                <div class="stat-badge warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span><strong>Late:</strong> 30% penalty</span>
+                </div>
+                <div class="stat-badge danger">
+                    <i class="fas fa-times-circle"></i>
+                    <span><strong>No-Show:</strong> 100% charge</span>
+                </div>
+                <div class="stat-badge">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span><strong>Geo-Fence:</strong> 500m radius</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav>
+            <div class="container">
+                <a href="#" class="logo">
+                    <i class="fas fa-rocket"></i>
+                    <span>ParkSmart<span class="gradient-text">Pro</span></span>
+                </a>
+                <ul>
+                    <li><a href="#home" class="active">Home</a></li>
+                    <li><a href="#tiers">Pricing Tiers</a></li>
+                    <li><a href="#reserve">Reserve Now</a></li>
+                    <li><a href="#reserve" class="nav-cta"><i class="fas fa-bolt"></i> Book Parking</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero" id="home">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>
+                        Smart Parking with<br>
+                        <span class="gradient-text">Time-Locked Reservations</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Experience the future of parking. Reserve your spot, arrive on time, 
+                        and never worry about availability. Our revolutionary time-lock system 
+                        ensures zero wasted space and 100% reliability.
+                    </p>
+
+                    <div class="usp-alert">
+                        <div class="alert-header">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Core Rule - Must Follow</span>
+                        </div>
+                        <div class="alert-content">
+                            Reserve a spot → Must arrive within time window
+                        </div>
+                        <div class="timer-display-hero">
+                            <i class="fas fa-hourglass-half"></i> 60:00 MINUTES
+                        </div>
+                        <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+                            Late arrival = Auto-cancel + Penalty | No-show = 100% charged
+                        </p>
+                    </div>
+
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <div class="hero-stat-value">94%</div>
+                            <div class="hero-stat-label">On-Time Arrivals</div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-value">2.3x</div>
+                            <div class="hero-stat-label">Faster Turnover</div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-value">0%</div>
+                            <div class="hero-stat-label">Spot Blocking</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reservation Card -->
+                <div class="reservation-card" id="reserve">
+                    <h3><i class="fas fa-parking"></i> Reserve Your Spot</h3>
+                    
+                    <form class="search-form" onsubmit="event.preventDefault(); searchParking();">
+                        <div class="form-group">
+                            <label><i class="fas fa-map-marker-alt"></i> Destination</label>
+                            <input type="text" id="locationInput" placeholder="Enter your destination..." required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> Date & Time</label>
+                            <input type="datetime-local" id="dateTime" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-star"></i> Reservation Tier</label>
+                            <select id="tierSelect" onchange="updateTierInfo()">
+                                <option value="standard">🟢 Standard - 60 min - ₹650</option>
+                                <option value="priority">🟡 Priority - 75 min - ₹1,200</option>
+                                <option value="vip">🔴 VIP Ultra - 90 min - ₹2,000</option>
+                            </select>
+                        </div>
+
+                        <!-- Tier Info Boxes -->
+                        <div class="tier-info-box standard active" id="tierInfoStandard">
+                            <div class="tier-benefits">
+                                <div class="tier-benefit">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Standard parking spots (any location)</span>
+                                </div>
+                                <div class="tier-benefit">
+                                    <i class="fas fa-clock"></i>
+                                    <span>60-minute arrival window</span>
+                                </div>
+                                <div class="tier-benefit">
+                                    <i class="fas fa-headset"></i>
+                                    <span>Basic customer support</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tier-info-box priority" id="tierInfoPriority">
+                            <div class="tier-benefits">
+                                <div class="tier-benefit">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Better location spots (mid-range)</span>
+                                </div>
+                                <div class="tier-benefit">
+                                    <i class="fas fa-clock"></i>
+                                    <span>75-minute arrival window + 5 min grace</span>
+                                </div>
+                                <div class="tier-benefit">
+                                    <i class="fas fa-car"></i>
+                                    <span>Wider parking spaces</span>
+                                </div>
+                                <div class="tier-benefit">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Priority support + Free cancellation</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tier-info-box vip" id="tierInfoVip">
+                            <div class="tier-benefits">
+                                <div class="tier-benefit">
+                                    <i class="fas fa-crown"></i>
+                                    <span>Premium spots near entrance/exit</span>
+                                </div>
+                                <div class="tier-benefit">
+                                    <i class="fas fa-clock"></i>
+                                    <span>90-minute window + 15 min grace</span>
+                                </div>
+                                <div class="tier-benefit">
+                                    <i class="fas fa-bolt"></i>
+                                    <span>EV charging priority access</span>
+                                </div>
+                                <div class="tier-benefit">
+                                    <i class="fas fa-umbrella"></i>
+                                    <span>Covered parking (when available)</span>
+                                </div>
+                                <div class="tier-benefit">
+                                    <i class="fas fa-concierge-bell"></i>
+                                    <span>VIP support 24/7 + Free cancellation</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                            Find Available Parking
+                        </button>
+                    </form>
+
+                    <!-- Parking Results -->
+                    <div class="parking-results" id="parkingResults">
+                        <div class="results-header">
+                            <h4 style="font-size: 1.25rem;"><i class="fas fa-map-marked-alt"></i> Nearby Parking</h4>
+                            <span class="results-count"><strong id="resultsCount">5</strong> locations found</span>
+                        </div>
+                        
+                        <div class="parking-locations" id="parkingLocations">
+                            <!-- Parking locations will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Timer Display -->
+                    <div class="timer-display" id="timerDisplay">
+                        <div class="timer-header">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span>Reservation Active</span>
+                        </div>
+                        <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Arrive before timer expires</p>
+                        
+                        <div class="countdown" id="countdown">60:00</div>
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressBar" style="width: 100%"></div>
+                        </div>
+                        
+                        <div class="timer-info">
+                            <div class="timer-info-grid">
+                                <div class="timer-info-item">
+                                    <span class="timer-info-label">Location</span>
+                                    <span class="timer-info-value" id="selectedLocation">-</span>
+                                </div>
+                                <div class="timer-info-item">
+                                    <span class="timer-info-label">Floor</span>
+                                    <span class="timer-info-value" id="selectedFloor">-</span>
+                                </div>
+                                <div class="timer-info-item">
+                                    <span class="timer-info-label">Spot</span>
+                                    <span class="timer-info-value" id="selectedSpot">-</span>
+                                </div>
+                                <div class="timer-info-item">
+                                    <span class="timer-info-label">Tier</span>
+                                    <span class="timer-info-value" id="selectedTier">-</span>
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin-top: 1rem; font-size: 1.5rem; font-weight: 800; color: var(--accent-primary);">
+                                Fee: ₹<span id="reservationFee">650</span>
+                            </div>
+                        </div>
+                        
+                        <div class="timer-actions">
+                            <button class="btn btn-secondary" onclick="cancelReservation()">
+                                <i class="fas fa-times"></i> Cancel Reservation
+                            </button>
+                            <button class="btn btn-primary" onclick="simulateArrival()">
+                                <i class="fas fa-check"></i> I've Arrived - Check In
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Success Message -->
+                    <div class="success-message" id="successMessage">
+                        <div class="success-icon">✅</div>
+                        <h4>Check-In Successful!</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                            Welcome to <strong id="successLocation">Central Plaza Parking</strong>. 
+                            Your spot is confirmed and ready. Have a great time!
+                        </p>
+                        <button class="btn btn-primary" onclick="rebookParking()">
+                            <i class="fas fa-redo"></i> Reserve Another Spot
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Floor Details Modal -->
+        <div class="modal" id="floorModal">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeModal('floorModal')">
+                    <i class="fas fa-times"></i>
+                </span>
+                
+                <div class="modal-header">
+                    <h3 id="modalLocationName">Central Plaza Parking</h3>
+                    <p id="modalLocationAddress"><i class="fas fa-map-marker-alt"></i> MG Road, Bangalore</p>
+                </div>
+
+                <!-- Tier Filter -->
+                <div class="tier-filter">
+                    <button class="tier-filter-btn standard active" id="filterStandard" onclick="filterByTier('standard')">
+                        <i class="fas fa-circle"></i> Standard Spots
+                    </button>
+                    <button class="tier-filter-btn priority" id="filterPriority" onclick="filterByTier('priority')">
+                        <i class="fas fa-star"></i> Priority Spots
+                    </button>
+                    <button class="tier-filter-btn vip" id="filterVip" onclick="filterByTier('vip')">
+                        <i class="fas fa-crown"></i> VIP Spots
+                    </button>
+                </div>
+
+                <div id="floorsContainer">
+                    <!-- Floors will be inserted here -->
+                </div>
+
+                <div style="margin-top: 2.5rem; text-align: center;">
+                    <button class="btn btn-secondary" onclick="closeModal('floorModal')">
+                        <i class="fas fa-arrow-left"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tiers Section -->
+        <section class="section" id="tiers">
+            <div class="container">
+                <div class="section-header">
+                    <h2><i class="fas fa-gem"></i> Reservation Tiers</h2>
+                    <p>Different tiers = Different spots & exclusive benefits. Choose what fits your needs.</p>
+                </div>
+
+                <div class="tiers-grid">
+                    <div class="tier-card standard">
+                        <div class="tier-icon">🟢</div>
+                        <div class="tier-name">Standard</div>
+                        <div class="tier-price">₹650<span>/booking</span></div>
+                        <ul class="tier-features">
+                            <li><i class="fas fa-check"></i> Any available parking spot</li>
+                            <li><i class="fas fa-check"></i> 60-minute arrival window</li>
+                            <li><i class="fas fa-check"></i> Basic customer support</li>
+                            <li><i class="fas fa-check"></i> GPS auto check-in</li>
+                            <li><i class="fas fa-check"></i> Standard refund policy</li>
+                        </ul>
+                        <button class="btn btn-secondary" style="width: 100%; margin-top: 1.5rem;">
+                            <i class="fas fa-parking"></i> Select Standard
+                        </button>
+                    </div>
+
+                    <div class="tier-card priority-tier featured">
+                        <div class="tier-badge-top">🔥 Most Popular</div>
+                        <div class="tier-icon">🟡</div>
+                        <div class="tier-name">Priority</div>
+                        <div class="tier-price">₹1,200<span>/booking</span></div>
+                        <ul class="tier-features">
+                            <li><i class="fas fa-check"></i> Better location spots</li>
+                            <li><i class="fas fa-check"></i> 75-minute arrival window</li>
+                            <li><i class="fas fa-check"></i> 5-minute grace period</li>
+                            <li><i class="fas fa-check"></i> Wider parking spaces</li>
+                            <li><i class="fas fa-check"></i> Priority customer support</li>
+                            <li><i class="fas fa-check"></i> Free cancellation (>30 min)</li>
+                        </ul>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">
+                            <i class="fas fa-star"></i> Select Priority
+                        </button>
+                    </div>
+
+                    <div class="tier-card vip-tier">
+                        <div class="tier-icon">🔴</div>
+                        <div class="tier-name">VIP Ultra</div>
+                        <div class="tier-price">₹2,000<span>/booking</span></div>
+                        <ul class="tier-features">
+                            <li><i class="fas fa-check"></i> Premium near entrance/exit</li>
+                            <li><i class="fas fa-check"></i> 90-minute arrival window</li>
+                            <li><i class="fas fa-check"></i> 15-minute grace period</li>
+                            <li><i class="fas fa-check"></i> EV charging priority</li>
+                            <li><i class="fas fa-check"></i> Covered parking spots</li>
+                            <li><i class="fas fa-check"></i> VIP support 24/7</li>
+                            <li><i class="fas fa-check"></i> Free cancellation anytime</li>
+                        </ul>
+                        <button class="btn btn-secondary" style="width: 100%; margin-top: 1.5rem;">
+                            <i class="fas fa-crown"></i> Select VIP
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="container">
+                <div class="footer-logo">
+                    <span class="gradient-text">ParkSmart Pro</span>
+                </div>
+                <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 2rem;">
+                    Revolutionary time-locked parking platform eliminating no-shows and maximizing 
+                    efficiency for drivers and parking owners across India.
+                </p>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 ParkSmart Pro. All rights reserved. | Built with ⏱️ time-locked innovation</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="notification-toast" id="notificationToast">
+        <i class="fas fa-bell"></i>
+        <div>
+            <strong>Notification</strong>
+            <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;" id="notificationMessage">Message here</p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Sample parking data with tier-based spots
+        const parkingData = [
+            {
+                id: 1,
+                name: 'Central Plaza Parking',
+                address: 'MG Road, Bangalore',
+                distance: '0.3 km',
+                walkTime: '5 min',
+                totalSpots: 180,
+                availableSpots: 67,
+                rating: 4.8,
+                features: ['Covered', '24/7 Security', 'CCTV', 'Valet'],
+                floors: [
+                    {
+                        name: 'Ground Floor',
+                        total: 60,
+                        available: 23,
+                        occupied: 29,
+                        reserved: 8,
+                        spots: generateTieredSpots(60, 'ground')
+                    },
+                    {
+                        name: 'First Floor',
+                        total: 60,
+                        available: 28,
+                        occupied: 25,
+                        reserved: 7,
+                        spots: generateTieredSpots(60, 'first')
+                    },
+                    {
+                        name: 'Second Floor',
+                        total: 60,
+                        available: 16,
+                        occupied: 38,
+                        reserved: 6,
+                        spots: generateTieredSpots(60, 'second')
+                    }
+                ]
+            },
+            {
+                id: 2,
+                name: 'Metro Station Multi-Level',
+                address: 'Trinity Metro, Bangalore',
+                distance: '0.5 km',
+                walkTime: '8 min',
+                totalSpots: 240,
+                availableSpots: 34,
+                rating: 4.6,
+                features: ['Metro Access', 'EV Charging', 'CCTV'],
+                floors: [
+                    {
+                        name: 'Basement 1',
+                        total: 80,
+                        available: 8,
+                        occupied: 65,
+                        reserved: 7,
+                        spots: generateTieredSpots(80, 'basement')
+                    },
+                    {
+                        name: 'Ground Floor',
+                        total: 80,
+                        available: 14,
+                        occupied: 59,
+                        reserved: 7,
+                        spots: generateTieredSpots(80, 'ground')
+                    },
+                    {
+                        name: 'First Floor',
+                        total: 80,
+                        available: 12,
+                        occupied: 61,
+                        reserved: 7,
+                        spots: generateTieredSpots(80, 'first')
+                    }
+                ]
+            },
+            {
+                id: 3,
+                name: 'Premium Garage Tower',
+                address: 'UB City, Bangalore',
+                distance: '0.1 km',
+                walkTime: '2 min',
+                totalSpots: 300,
+                availableSpots: 142,
+                rating: 4.9,
+                features: ['Valet', 'Premium', 'EV Charging', 'Covered'],
+                floors: [
+                    {
+                        name: 'Ground Floor',
+                        total: 50,
+                        available: 18,
+                        occupied: 28,
+                        reserved: 4,
+                        spots: generateTieredSpots(50, 'ground')
+                    },
+                    {
+                        name: 'Level 1',
+                        total: 50,
+                        available: 24,
+                        occupied: 22,
+                        reserved: 4,
+                        spots: generateTieredSpots(50, 'first')
+                    },
+                    {
+                        name: 'Level 2',
+                        total: 50,
+                        available: 31,
+                        occupied: 15,
+                        reserved: 4,
+                        spots: generateTieredSpots(50, 'second')
+                    },
+                    {
+                        name: 'Level 3',
+                        total: 50,
+                        available: 28,
+                        occupied: 18,
+                        reserved: 4,
+                        spots: generateTieredSpots(50, 'third')
+                    },
+                    {
+                        name: 'Level 4',
+                        total: 50,
+                        available: 21,
+                        occupied: 25,
+                        reserved: 4,
+                        spots: generateTieredSpots(50, 'fourth')
+                    },
+                    {
+                        name: 'Rooftop',
+                        total: 50,
+                        available: 20,
+                        occupied: 26,
+                        reserved: 4,
+                        spots: generateTieredSpots(50, 'rooftop')
+                    }
+                ]
+            },
+            {
+                id: 4,
+                name: 'Mall Parking Complex',
+                address: 'Orion Mall, Bangalore',
+                distance: '0.7 km',
+                walkTime: '10 min',
+                totalSpots: 400,
+                availableSpots: 198,
+                rating: 4.5,
+                features: ['Mall Access', 'Food Court', 'CCTV', 'Lifts'],
+                floors: [
+                    {
+                        name: 'Basement 2',
+                        total: 100,
+                        available: 45,
+                        occupied: 48,
+                        reserved: 7,
+                        spots: generateTieredSpots(100, 'basement')
+                    },
+                    {
+                        name: 'Basement 1',
+                        total: 100,
+                        available: 52,
+                        occupied: 41,
+                        reserved: 7,
+                        spots: generateTieredSpots(100, 'basement')
+                    },
+                    {
+                        name: 'Ground Floor',
+                        total: 100,
+                        available: 51,
+                        occupied: 42,
+                        reserved: 7,
+                        spots: generateTieredSpots(100, 'ground')
+                    },
+                    {
+                        name: 'Terrace',
+                        total: 100,
+                        available: 50,
+                        occupied: 43,
+                        reserved: 7,
+                        spots: generateTieredSpots(100, 'rooftop')
+                    }
+                ]
+            },
+            {
+                id: 5,
+                name: 'Tech Park Parking',
+                address: 'Manyata Tech Park, Bangalore',
+                distance: '1.2 km',
+                walkTime: '15 min',
+                totalSpots: 500,
+                availableSpots: 289,
+                rating: 4.7,
+                features: ['Corporate', 'EV Charging', '24/7', 'Cafeteria'],
+                floors: [
+                    {
+                        name: 'Basement 1',
+                        total: 125,
+                        available: 72,
+                        occupied: 46,
+                        reserved: 7,
+                        spots: generateTieredSpots(125, 'basement')
+                    },
+                    {
+                        name: 'Ground Floor',
+                        total: 125,
+                        available: 68,
+                        occupied: 50,
+                        reserved: 7,
+                        spots: generateTieredSpots(125, 'ground')
+                    },
+                    {
+                        name: 'Level 1',
+                        total: 125,
+                        available: 75,
+                        occupied: 43,
+                        reserved: 7,
+                        spots: generateTieredSpots(125, 'first')
+                    },
+                    {
+                        name: 'Level 2',
+                        total: 125,
+                        available: 74,
+                        occupied: 44,
+                        reserved: 7,
+                        spots: generateTieredSpots(125, 'second')
+                    }
+                ]
+            }
+        ];
+
+        // Generate tiered parking spots
+        function generateTieredSpots(total, floorType) {
+            const spots = [];
+            
+            let vipCount, priorityCount, standardCount;
+            
+            if (floorType === 'ground') {
+                vipCount = Math.floor(total * 0.30);
+                priorityCount = Math.floor(total * 0.35);
+                standardCount = total - vipCount - priorityCount;
+            } else if (floorType === 'first') {
+                vipCount = Math.floor(total * 0.20);
+                priorityCount = Math.floor(total * 0.40);
+                standardCount = total - vipCount - priorityCount;
+            } else {
+                vipCount = Math.floor(total * 0.10);
+                priorityCount = Math.floor(total * 0.30);
+                standardCount = total - vipCount - priorityCount;
+            }
+
+            let spotIndex = 0;
+            
+            for (let i = 0; i < vipCount; i++) {
+                spots.push(createSpot(spotIndex++, 'vip'));
+            }
+            
+            for (let i = 0; i < priorityCount; i++) {
+                spots.push(createSpot(spotIndex++, 'priority'));
+            }
+            
+            for (let i = 0; i < standardCount; i++) {
+                spots.push(createSpot(spotIndex++, 'standard'));
+            }
+
+            return spots.sort(() => Math.random() - 0.5);
+        }
+
+        function createSpot(index, tier) {
+            const statuses = ['available', 'occupied', 'reserved'];
+            const weights = [0.4, 0.5, 0.1];
+            
+            const random = Math.random();
+            let status;
+            if (random < weights[0]) status = 'available';
+            else if (random < weights[0] + weights[1]) status = 'occupied';
+            else status = 'reserved';
+
+            return {
+                number: String.fromCharCode(65 + Math.floor(index / 20)) + ((index % 20) + 1),
+                status: status,
+                tier: tier,
+                price: tier === 'vip' ? 2000 : tier === 'priority' ? 1200 : 650
+            };
+        }
+
+        // Global variables
+        let reservationTimer;
+        let timeRemaining = 3600;
+        let totalTime = 3600;
+        let selectedParkingData = null;
+        let currentTierFilter = 'standard';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('dateTime').value = now.toISOString().slice(0, 16);
+        });
+
+        // Update tier info
+        function updateTierInfo() {
+            const tierSelect = document.getElementById('tierSelect').value;
+            
+            document.getElementById('tierInfoStandard').classList.remove('active');
+            document.getElementById('tierInfoPriority').classList.remove('active');
+            document.getElementById('tierInfoVip').classList.remove('active');
+            
+            if (tierSelect === 'standard') {
+                document.getElementById('tierInfoStandard').classList.add('active');
+                currentTierFilter = 'standard';
+            } else if (tierSelect === 'priority') {
+                document.getElementById('tierInfoPriority').classList.add('active');
+                currentTierFilter = 'priority';
+            } else if (tierSelect === 'vip') {
+                document.getElementById('tierInfoVip').classList.add('active');
+                currentTierFilter = 'vip';
+            }
+        }
+
+        // Search parking
+        function searchParking() {
+            const location = document.getElementById('locationInput').value;
+            if (!location) {
+                showNotification('Please enter a destination');
+                return;
+            }
+
+            displayParkingLocations();
+            document.getElementById('parkingResults').classList.add('active');
+            document.getElementById('parkingResults').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Display parking locations
+        function displayParkingLocations() {
+            const container = document.getElementById('parkingLocations');
+            container.innerHTML = '';
+
+            parkingData.forEach(parking => {
+                const availabilityPercent = (parking.availableSpots / parking.totalSpots) * 100;
+                let statusClass = 'status-available';
+                let statusText = '✓ Available';
+                let statusIcon = 'fa-check-circle';
+
+                if (availabilityPercent < 20) {
+                    statusClass = 'status-filling';
+                    statusText = '⚡ Filling Fast';
+                    statusIcon = 'fa-bolt';
+                }
+                if (availabilityPercent === 0) {
+                    statusClass = 'status-full';
+                    statusText = '❌ Full';
+                    statusIcon = 'fa-times-circle';
+                }
+
+                const card = document.createElement('div');
+                card.className = 'parking-location-card';
+                card.onclick = () => showFloorDetails(parking);
+                card.innerHTML = `
+                    <div class="floors-indicator">
+                        <i class="fas fa-building"></i> ${parking.floors.length} Floor${parking.floors.length > 1 ? 's' : ''}
+                    </div>
+                    <div class="location-header">
+                        <div>
+                            <div class="location-name">${parking.name}</div>
+                            <div class="location-address">
+                                <i class="fas fa-map-marker-alt"></i> ${parking.address}
+                            </div>
+                        </div>
+                        <div class="location-status ${statusClass}">
+                            <i class="fas ${statusIcon}"></i> ${statusText}
+                        </div>
+                    </div>
+                    <div class="location-details">
+                        <div class="detail-item">
+                            <i class="fas fa-route"></i> ${parking.distance}
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-walking"></i> ${parking.walkTime}
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-star"></i> ${parking.rating}
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-rupee-sign"></i> From ₹650
+                        </div>
+                    </div>
+                    <div class="location-features">
+                        ${parking.features.map(f => `
+                            <span class="feature-badge">
+                                <i class="fas fa-check"></i> ${f}
+                            </span>
+                        `).join('')}
+                    </div>
+                    <div class="location-stats">
+                        <div class="stat-item">
+                            <span class="stat-item-label">Available Spots</span>
+                            <span class="stat-item-value">${parking.availableSpots}/${parking.totalSpots}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-item-label">Occupancy</span>
+                            <span class="stat-item-value">${Math.round((1 - parking.availableSpots/parking.totalSpots) * 100)}%</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('resultsCount').textContent = parkingData.length;
+        }
+
+        // Show floor details
+        function showFloorDetails(parking) {
+            selectedParkingData = parking;
+            document.getElementById('modalLocationName').textContent = parking.name;
+            document.getElementById('modalLocationAddress').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${parking.address}`;
+
+            const floorsContainer = document.getElementById('floorsContainer');
+            floorsContainer.innerHTML = '';
+
+            parking.floors.forEach((floor) => {
+                const floorCard = document.createElement('div');
+                floorCard.className = 'floor-card';
+                
+                const tierCounts = {
+                    vip: { available: 0, total: 0 },
+                    priority: { available: 0, total: 0 },
+                    standard: { available: 0, total: 0 }
+                };
+                
+                floor.spots.forEach(spot => {
+                    tierCounts[spot.tier].total++;
+                    if (spot.status === 'available') {
+                        tierCounts[spot.tier].available++;
+                    }
+                });
+
+                const availPercent = (floor.available / floor.total) * 100;
+                let availClass = 'high';
+                if (availPercent < 30) availClass = 'medium';
+                if (availPercent < 15) availClass = 'low';
+
+                floorCard.innerHTML = `
+                    <div class="floor-header">
+                        <div class="floor-name"><i class="fas fa-layer-group"></i> ${floor.name}</div>
+                        <div class="floor-availability ${availClass}">
+                            ${floor.available}/${floor.total} Available
+                        </div>
+                    </div>
+
+                    <div class="floor-info">
+                        <div class="floor-info-item">
+                            <div class="floor-info-label">🟢 Standard</div>
+                            <div class="floor-info-value" style="color: var(--tier-standard);">
+                                ${tierCounts.standard.available}/${tierCounts.standard.total}
+                            </div>
+                        </div>
+                        <div class="floor-info-item">
+                            <div class="floor-info-label">🟡 Priority</div>
+                            <div class="floor-info-value" style="color: var(--tier-priority);">
+                                ${tierCounts.priority.available}/${tierCounts.priority.total}
+                            </div>
+                        </div>
+                        <div class="floor-info-item">
+                            <div class="floor-info-label">🔴 VIP</div>
+                            <div class="floor-info-value" style="color: var(--tier-vip);">
+                                ${tierCounts.vip.available}/${tierCounts.vip.total}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="parking-spots-grid">
+                        ${floor.spots.map(spot => `
+                            <div class="parking-spot ${spot.status} tier-${spot.tier} ${spot.tier !== currentTierFilter ? 'hidden' : ''}" 
+                                 onclick="${spot.status === 'available' ? `selectSpot('${parking.name}', '${floor.name}', '${spot.number}', ${spot.price}, '${spot.tier}')` : 'return false;'}">
+                                <div class="tier-badge"></div>
+                                <div class="spot-icon">
+                                    ${spot.status === 'available' ? '<i class="fas fa-parking"></i>' : 
+                                      spot.status === 'occupied' ? '<i class="fas fa-car"></i>' : 
+                                      '<i class="fas fa-clock"></i>'}
+                                </div>
+                                <div>${spot.number}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="floor-legend">
+                        <div class="legend-item">
+                            <div class="legend-box tier-standard"></div>
+                            <span>Standard (₹650)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box tier-priority"></div>
+                            <span>Priority (₹1,200)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box tier-vip"></div>
+                            <span>VIP (₹2,000)</span>
+                        </div>
+                    </div>
+                `;
+                floorsContainer.appendChild(floorCard);
+            });
+
+            filterByTier(currentTierFilter);
+            openModal('floorModal');
+        }
+
+        // Filter by tier
+        function filterByTier(tier) {
+            currentTierFilter = tier;
+            
+            document.getElementById('filterStandard').classList.remove('active');
+            document.getElementById('filterPriority').classList.remove('active');
+            document.getElementById('filterVip').classList.remove('active');
+            
+            document.getElementById('filter' + tier.charAt(0).toUpperCase() + tier.slice(1)).classList.add('active');
+            
+            document.querySelectorAll('.parking-spot').forEach(spot => {
+                if (spot.classList.contains('tier-' + tier)) {
+                    spot.classList.remove('hidden');
+                } else {
+                    spot.classList.add('hidden');
+                }
+            });
+        }
+
+        // Select spot
+        function selectSpot(locationName, floorName, spotNumber, price, tier) {
+            const tierNames = {
+                'standard': 'Standard',
+                'priority': 'Priority',
+                'vip': 'VIP Ultra'
+            };
+            
+            if (confirm(`Reserve ${spotNumber} (${tierNames[tier]}) at ${floorName}, ${locationName} for ₹${price}?`)) {
+                document.getElementById('selectedLocation').textContent = locationName;
+                document.getElementById('selectedFloor').textContent = floorName;
+                document.getElementById('selectedSpot').textContent = spotNumber;
+                document.getElementById('selectedTier').textContent = tierNames[tier];
+                document.getElementById('reservationFee').textContent = price;
+                
+                closeModal('floorModal');
+                
+                // Hide all other sections
+                document.getElementById('parkingResults').style.display = 'none';
+                document.querySelector('.search-form').style.display = 'none';
+                
+                document.getElementById('timerDisplay').classList.add('active');
+                document.getElementById('timerDisplay').scrollIntoView({ behavior: 'smooth' });
+                
+                startTimer(tier);
+                showNotification('Reservation confirmed! Timer started.');
+            }
+        }
+
+        // Start timer
+        function startTimer(tier) {
+            if (tier === 'standard') {
+                timeRemaining = 3600;
+            } else if (tier === 'priority') {
+                timeRemaining = 4500;
+            } else if (tier === 'vip') {
+                timeRemaining = 5400;
+            }
+            totalTime = timeRemaining;
+
+            const countdownEl = document.getElementById('countdown');
+            const progressBar = document.getElementById('progressBar');
+            const timerDisplay = document.getElementById('timerDisplay');
+
+            clearInterval(reservationTimer);
+            
+            reservationTimer = setInterval(() => {
+                timeRemaining--;
+
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                countdownEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                const percentage = (timeRemaining / totalTime) * 100;
+                progressBar.style.width = percentage + '%';
+
+                if (timeRemaining === 600) {
+                    timerDisplay.classList.add('danger');
+                    showNotification('⚠️ Warning: Only 10 minutes remaining!');
+                }
+
+                if (timeRemaining <= 0) {
+                    clearInterval(reservationTimer);
+                    const penalty = parseFloat(document.getElementById('reservationFee').textContent) * 0.3;
+                    alert(`❌ Time Expired!\n\nReservation cancelled.\nPenalty fee: ₹${penalty.toFixed(0)}\n\nSpot has been released.`);
+                    resetTimer();
+                }
+            }, 1000);
+        }
+
+        // Cancel reservation
+        function cancelReservation() {
+            if (confirm('Cancel reservation? Refund amount depends on timing.')) {
+                clearInterval(reservationTimer);
+                const fee = parseFloat(document.getElementById('reservationFee').textContent);
+                const refund = fee * 0.7;
+                alert(`✓ Reservation cancelled.\n\nRefund: ₹${refund.toFixed(0)}`);
+                resetTimer();
+            }
+        }
+
+        // Simulate arrival
+        function simulateArrival() {
+            clearInterval(reservationTimer);
+            const location = document.getElementById('selectedLocation').textContent;
+            document.getElementById('successLocation').textContent = location;
+            document.getElementById('timerDisplay').style.display = 'none';
+            document.getElementById('successMessage').classList.add('active');
+            document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+            showNotification('✅ Check-in successful! Welcome to your parking spot.');
+        }
+
+        // Rebook parking - FIXED
+        function rebookParking() {
+            // Hide success message
+            document.getElementById('successMessage').classList.remove('active');
+            
+            // Show search form again
+            document.querySelector('.search-form').style.display = 'flex';
+            
+            // Reset all form fields
+            document.getElementById('locationInput').value = '';
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('dateTime').value = now.toISOString().slice(0, 16);
+            document.getElementById('tierSelect').value = 'standard';
+            updateTierInfo();
+            
+            // Hide parking results
+            document.getElementById('parkingResults').classList.remove('active');
+            
+            // Reset timer display
+            document.getElementById('timerDisplay').classList.remove('active', 'danger');
+            
+            // Scroll to top of reservation card
+            document.getElementById('reserve').scrollIntoView({ behavior: 'smooth' });
+            
+            showNotification('Ready for new reservation! 🚀');
+        }
+
+        // Reset timer
+        function resetTimer() {
+            clearInterval(reservationTimer);
+            timeRemaining = totalTime;
+            document.getElementById('timerDisplay').classList.remove('active', 'danger');
+            document.getElementById('progressBar').style.width = '100%';
+            
+            // Show search form again
+            document.querySelector('.search-form').style.display = 'flex';
+            document.getElementById('parkingResults').classList.remove('active');
+        }
+
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal(modal.id);
+                }
+            });
+        });
+
+        // Show notification
+        function showNotification(message) {
+            const toast = document.getElementById('notificationToast');
+            document.getElementById('notificationMessage').textContent = message;
+            toast.classList.add('active');
+            
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 4000);
+        }
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
